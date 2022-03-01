@@ -61,6 +61,7 @@ public:
                                 uint64_t timestampUs,
                                 FrameType frameType) = 0;
     virtual void onEncoderError(std::string errorDescription) = 0;
+    virtual void onEncoderEOS() = 0;
 };
 
 class VideoEncoder
@@ -70,7 +71,7 @@ public:
     virtual bool init(VideoEncoderMetadata metadata) = 0;
     virtual bool encode(std::shared_ptr<const gecko::camera::YCbCrFrame> frame,
                         bool forceSync) = 0;
-
+    virtual void setBitrate(uint32_t bps) = 0;
     void setListener(VideoEncoderListener *listener)
     {
         m_encoderListener = listener;

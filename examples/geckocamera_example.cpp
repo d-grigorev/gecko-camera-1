@@ -228,6 +228,11 @@ private:
         cout << "Video encoder error: " << errorDescription << "\n";
     }
 
+    void onEncoderEOS()
+    {
+        cout << "Video encoder EOS\n";
+    }
+
     // Decoder
     void onDecodedYCbCrFrame(const gecko::camera::YCbCrFrame *frame)
     {

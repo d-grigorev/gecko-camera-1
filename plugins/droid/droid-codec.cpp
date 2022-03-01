@@ -147,8 +147,9 @@ public:
     explicit DroidVideoEncoder(CodecType codecType);
     ~DroidVideoEncoder();
 
-    bool init(VideoEncoderMetadata metadata);
-    bool encode(shared_ptr<const YCbCrFrame> frame, bool forceSync);
+    bool init(VideoEncoderMetadata metadata) override;
+    bool encode(shared_ptr<const YCbCrFrame> frame, bool forceSync) override;
+    void setBitrate(uint32_t bps) override;
 
     void dataAvailable(DroidMediaCodecData *encoded);
     void error(string errorDescription);
@@ -461,6 +462,20 @@ bool DroidVideoEncoder::encode(shared_ptr<const YCbCrFrame> frame, bool forceSyn
     return true;
 }
 
+void DroidVideoEncoder::setBitrate(uint32_t bps)
+{
+    if (m_codec) {
+        // Droid codecs seen to fail with lower values
+        if (bps < 100000) {
+            LOGI("bitrate " << bps << " is too low, adjusting to 100000");
+            bps = 100000;
+        }
+        if (!droid_media_codec_set_video_encoder_bitrate(m_codec, bps)) {
+            LOGE("Couldn't set bitrate " << bps);
+        }
+    }
+}
+
 #if 0
 static void dump(uint8_t *p, size_t size)
 {
@@ -515,7 +530,13 @@ void DroidVideoEncoder::error_cb(void *data, int err)
 
 void DroidVideoEncoder::signal_eos_cb(void *data)
 {
+    DroidVideoEncoder *encoder = static_cast<DroidVideoEncoder *>(data);
+
     LOGI("Encoder EOS");
+
+    if (encoder->m_encoderListener) {
+        encoder->m_encoderListener->onEncoderEOS();
+    }
 }
 
 void DroidVideoEncoder::DataAvailableCallback(void *data, DroidMediaCodecData *encoded)
